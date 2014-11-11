@@ -1,6 +1,21 @@
 # Creating the series of images for use in the ASPHER poster
 
 # Jon Minton
+# 11 November 2014
+# Current idea:
+
+# Calculate difference in mort rate for 
+# Scotland
+# England & Wales
+# France
+# Norway
+
+# Compared with European Average
+
+
+
+
+
 # 28 September 2014
 
 # 1)  clear the workspace
@@ -25,6 +40,283 @@ RequiredPackages(
     "RColorBrewer"
   )
 )
+
+
+######################################################################################
+# SOURCE DATA
+
+# 4) load human mortality database (HMD) data on population counts and death counts
+# in the 'tidy data' format suggested by Hadley Wickham 
+counts <- read.csv("data/counts.csv")
+# (For the code used to convert the existing files to the 'tidy' please contact me)
+
+# 5) load a file which shows which of the HMD countries are part of Europe
+
+country_codes <- read.csv("Data/country_codes__new.csv", stringsAsFactors=F)
+
+europe_codes <- country_codes$short[country_codes$europe==1]
+######################################################################################
+# DERIVED DATA
+
+# 6) find the subset of counts data which is of European countries
+
+
+counts_eu <- subset(
+  counts,
+  subset=country %in% europe_codes                  
+)
+
+# 7) aggregate up count data from all available European nations
+counts_eu_all <- ddply(
+  counts_eu,
+  .(sex, year, age),
+  summarise,
+  n_countries=length(death_count),
+  death_count=sum(death_count),
+  population_count=sum(population_count)
+)
+
+
+# 8) want to produce a simple summary of this
+counts_summaries <- ddply(
+  tmp <- subset(counts_eu_all, subset=sex=="total"),
+  .(year),
+  summarise,
+  n_countries=median(n_countries),
+  population_count=sum(population_count)
+)
+
+# When was the earliest country's data available?
+country_by_earliest_year <- ddply(counts_eu, .(country), summarise, earliest=min(year))
+country_by_earliest_year <- arrange(country_by_earliest_year, earliest)
+
+# 9) rates for all of Europe
+
+rates_eu_all <- mutate(counts_eu_all, death_rate_europe=death_count/population_count)
+
+mort_eu <- rates_eu_all
+mort_eu$death_count <- NULL
+mort_eu$population_count <- NULL
+mort_eu$n_countries <- NULL
+
+
+mort_eu <- rename(mort_eu, replace=c("death_rate_europe"="europe"))
+
+
+# Calculate difference in mort rate for 
+# Scotland
+# England & Wales
+# France
+# Norway
+
+countries_to_keep <- c(
+  "GBRTENW",
+  "GBR_SCO",
+  "FRATNP",
+  "NOR"
+)
+
+counts_s <- subset(
+  counts,
+  subset=country %in% countries_to_keep
+)
+
+rates_s <- mutate(counts_s, death_rate = death_count/population_count)
+rates_s$death_count <- NULL
+rates_s$population_count <- NULL
+
+rates_s$country <- revalue(
+  rates_s$country,
+  replace=c(
+    "GBRTENW"="england_and_wales",
+    "GBR_SCO"="scotland",
+    "FRATNP"="france",
+    "NOR"="norway"
+    )                        
+                          )
+
+rates_wide <- melt(rates_s,
+                     id.vars=c("year", "age", "sex", "country"),
+                     measure.vars=c("death_rate")
+                     )
+rates_wide <- dcast(rates_wide,
+                    year + age + sex ~ country
+                    )
+
+rates_wide <- subset(
+  rates_wide,
+  subset=year >=1950 & year <=2010 & age <=80 
+  )
+
+rates_wide <- join(rates_wide, mort_eu)
+
+diffs <- mutate(
+  rates_wide,
+  france=france-europe,
+  scotland=scotland-europe,
+  england_and_wales=england_and_wales-europe,
+  norway=norway-europe
+                )
+
+dif_logs <- mutate(
+  rates_wide,
+  france=log(france)-log(europe),
+  scotland=log(scotland)-log(europe),
+  england_and_wales=log(england_and_wales) - log(europe),
+  norway=log(norway)-log(europe)
+  
+  )
+
+g1 <- contourplot(
+  france ~ year * age | sex, 
+  data=subset(dif_logs, subset=sex!="total"),
+  region=T, 
+  par.strip.text=list(cex=1.2, fontface="bold"),
+  ylab="age",
+  xlab="year",
+  cex=1.4,
+  at = seq(from= -1, to = 1, by=0.2),
+  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+  main=NULL
+)
+print(g1)
+
+g1 <- contourplot(
+  norway ~ year * age | sex , 
+  data=subset(dif_logs, subset=sex!="total"),
+  region=T, 
+  par.strip.text=list(cex=1.2, fontface="bold"),
+  ylab="age",
+  xlab="year",
+  cex=1.4,
+  at = seq(from= -1, to = 1, by=0.2),
+  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+  main=NULL
+)
+print(g1)
+
+g1 <- contourplot(
+  england_and_wales ~ year * age | sex , 
+  data=subset(dif_logs, subset=sex!="total"),
+  region=T, 
+  par.strip.text=list(cex=1.2, fontface="bold"),
+  ylab="age",
+  xlab="year",
+  cex=1.4,
+  at = seq(from= -1, to = 1, by=0.2),
+  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+  main=NULL
+)
+print(g1)
+
+g1 <- contourplot(
+  scotland ~ year * age | sex, 
+  data=subset(dif_logs, subset=sex!="total"),
+  region=T, 
+  par.strip.text=list(cex=1.2, fontface="bold"),
+  ylab="age",
+  xlab="year",
+  cex=1.4,
+  at = seq(from= -1, to = 1, by=0.2),
+  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+  main=NULL
+)
+print(g1)
+
+
+
+###########################################################
+###########################################################
+
+g1 <- levelplot(
+  france ~ year * age | sex, 
+  data=subset(dif_logs, subset=sex!="total"),
+  region=T, 
+  par.strip.text=list(cex=1.2, fontface="bold"),
+  ylab="age",
+  xlab="year",
+  cex=1.4,
+  at = seq(from= -1, to = 1, by=0.2),
+  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+  main=NULL
+)
+print(g1)
+
+
+g1 <- levelplot(
+  norway ~ year * age | sex , 
+  data=subset(dif_logs, subset=sex!="total"),
+  region=T, 
+  par.strip.text=list(cex=1.2, fontface="bold"),
+  ylab="age",
+  xlab="year",
+  cex=1.4,
+  at = seq(from= -1, to = 1, by=0.2),
+  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+  main=NULL
+)
+print(g1)
+
+
+g1 <- levelplot(
+  england_and_wales ~ year * age | sex , 
+  data=subset(dif_logs, subset=sex!="total"),
+  region=T, 
+  par.strip.text=list(cex=1.2, fontface="bold"),
+  ylab="age",
+  xlab="year",
+  cex=1.4,
+  at = seq(from= -1, to = 1, by=0.2),
+  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+  main=NULL
+)
+print(g1)
+
+
+g1 <- levelplot(
+  scotland ~ year * age | sex, 
+  data=subset(dif_logs, subset=sex!="total"),
+  region=T, 
+  par.strip.text=list(cex=1.2, fontface="bold"),
+  ylab="age",
+  xlab="year",
+  cex=1.4,
+  at = seq(from= -1, to = 1, by=0.2),
+  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+  main=NULL
+)
+print(g1)
+
+
+g1 <- contourplot(
+  europe~ year * age | sex, 
+  data=subset(mort_eu, subset=sex!="total" & 
+                age <=80 & year >=1950 & year <=2010 ), 
+  region=T, 
+  par.strip.text=list(cex=1.2, fontface="bold"),
+  ylab="age",
+  xlab="year",
+  cex=1.4,
+  cuts=50,
+  col.regions=rev(heat.colors(200)),
+  main=NULL
+)
+print(g1)
+
+g1 <- contourplot(
+  log(europe) ~ year * age | sex, 
+  data=subset(mort_eu, subset=sex!="total" & 
+                age <=80 & year >=1950 & year <=2010 ), 
+  region=T, 
+  par.strip.text=list(cex=1.2, fontface="bold"),
+  ylab="age",
+  xlab="year",
+  cex=1.4,
+  cuts=50,
+  col.regions=rev(heat.colors(200)),
+  main=NULL
+)
+print(g1)
 
 ######################################################################################
 # SOURCE DATA
