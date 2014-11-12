@@ -14,10 +14,6 @@
 
 
 
-
-
-# 28 September 2014
-
 # 1)  clear the workspace
 
 rm(list=ls())
@@ -167,7 +163,17 @@ dif_logs <- mutate(
   
   )
 
-g1 <- contourplot(
+
+
+
+
+###########################################################
+###########################################################
+tiff(
+  "figures/france.tiff",  
+  height=1000, width=2000
+)
+france_lev <- levelplot(
   france ~ year * age | sex, 
   data=subset(dif_logs, subset=sex!="total"),
   region=T, 
@@ -179,9 +185,14 @@ g1 <- contourplot(
   col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
   main=NULL
 )
-print(g1)
+print(france_lev)
+dev.off()
 
-g1 <- contourplot(
+tiff(
+  "figures/norway.tiff",  
+  height=1000, width=2000
+)
+norway_lev <- levelplot(
   norway ~ year * age | sex , 
   data=subset(dif_logs, subset=sex!="total"),
   region=T, 
@@ -193,9 +204,14 @@ g1 <- contourplot(
   col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
   main=NULL
 )
-print(g1)
+print(norway_lev)
+dev.off()
 
-g1 <- contourplot(
+tiff(
+  "figures/eng_wales.tiff",  
+  height=1000, width=2000
+)
+eng_lev <- levelplot(
   england_and_wales ~ year * age | sex , 
   data=subset(dif_logs, subset=sex!="total"),
   region=T, 
@@ -207,9 +223,14 @@ g1 <- contourplot(
   col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
   main=NULL
 )
-print(g1)
+print(eng_lev)
+dev.off()
 
-g1 <- contourplot(
+tiff(
+  "figures/scotland.tiff",  
+  height=1500, width=3000
+)
+scot_lev <- levelplot(
   scotland ~ year * age | sex, 
   data=subset(dif_logs, subset=sex!="total"),
   region=T, 
@@ -221,74 +242,14 @@ g1 <- contourplot(
   col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
   main=NULL
 )
-print(g1)
+print(scot_lev)
+dev.off()
 
-
-
-###########################################################
-###########################################################
-
-g1 <- levelplot(
-  france ~ year * age | sex, 
-  data=subset(dif_logs, subset=sex!="total"),
-  region=T, 
-  par.strip.text=list(cex=1.2, fontface="bold"),
-  ylab="age",
-  xlab="year",
-  cex=1.4,
-  at = seq(from= -1, to = 1, by=0.2),
-  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
-  main=NULL
+tiff(
+  "figures/all_ident.tiff",  
+  height=1500, width=3000
 )
-print(g1)
-
-
-g1 <- levelplot(
-  norway ~ year * age | sex , 
-  data=subset(dif_logs, subset=sex!="total"),
-  region=T, 
-  par.strip.text=list(cex=1.2, fontface="bold"),
-  ylab="age",
-  xlab="year",
-  cex=1.4,
-  at = seq(from= -1, to = 1, by=0.2),
-  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
-  main=NULL
-)
-print(g1)
-
-
-g1 <- levelplot(
-  england_and_wales ~ year * age | sex , 
-  data=subset(dif_logs, subset=sex!="total"),
-  region=T, 
-  par.strip.text=list(cex=1.2, fontface="bold"),
-  ylab="age",
-  xlab="year",
-  cex=1.4,
-  at = seq(from= -1, to = 1, by=0.2),
-  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
-  main=NULL
-)
-print(g1)
-
-
-g1 <- levelplot(
-  scotland ~ year * age | sex, 
-  data=subset(dif_logs, subset=sex!="total"),
-  region=T, 
-  par.strip.text=list(cex=1.2, fontface="bold"),
-  ylab="age",
-  xlab="year",
-  cex=1.4,
-  at = seq(from= -1, to = 1, by=0.2),
-  col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
-  main=NULL
-)
-print(g1)
-
-
-g1 <- contourplot(
+europe_ident <- contourplot(
   europe~ year * age | sex, 
   data=subset(mort_eu, subset=sex!="total" & 
                 age <=80 & year >=1950 & year <=2010 ), 
@@ -301,9 +262,15 @@ g1 <- contourplot(
   col.regions=rev(heat.colors(200)),
   main=NULL
 )
-print(g1)
+print(europe_ident)
+dev.off()
 
-g1 <- contourplot(
+tiff(
+  "figures/all_log.tiff",  
+  height=1500, width=3000
+)
+
+europe_log <- contourplot(
   log(europe) ~ year * age | sex, 
   data=subset(mort_eu, subset=sex!="total" & 
                 age <=80 & year >=1950 & year <=2010 ), 
@@ -316,10 +283,84 @@ g1 <- contourplot(
   col.regions=rev(heat.colors(200)),
   main=NULL
 )
-print(g1)
+print(europe_log)
+dev.off()
 
-######################################################################################
+##############################################################################
+##############################################################################
+
+# fig_france <- contourplot(
+#   france ~ year * age | sex, 
+#   data=subset(dif_logs, subset=sex!="total"),
+#   region=T, 
+#   par.strip.text=list(cex=1.2, fontface="bold"),
+#   ylab="age",
+#   xlab="year",
+#   cex=1.4,
+#   at = seq(from= -1, to = 1, by=0.2),
+#   col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+#   main=NULL
+# )
+# print(fig_france)
+# 
+# fig_norway <- contourplot(
+#   norway ~ year * age | sex , 
+#   data=subset(dif_logs, subset=sex!="total"),
+#   region=T, 
+#   par.strip.text=list(cex=1.2, fontface="bold"),
+#   ylab="age",
+#   xlab="year",
+#   cex=1.4,
+#   at = seq(from= -1, to = 1, by=0.2),
+#   col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+#   main=NULL
+# )
+# print(fig_norway)
+# 
+# fig_engwales <- contourplot(
+#   england_and_wales ~ year * age | sex , 
+#   data=subset(dif_logs, subset=sex!="total"),
+#   region=T, 
+#   par.strip.text=list(cex=1.2, fontface="bold"),
+#   ylab="age",
+#   xlab="year",
+#   cex=1.4,
+#   at = seq(from= -1, to = 1, by=0.2),
+#   col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+#   main=NULL
+# )
+# print(fig_engwales)
+# 
+# fig_scot <- contourplot(
+#   scotland ~ year * age | sex, 
+#   data=subset(dif_logs, subset=sex!="total"),
+#   region=T, 
+#   par.strip.text=list(cex=1.2, fontface="bold"),
+#   ylab="age",
+#   xlab="year",
+#   cex=1.4,
+#   at = seq(from= -1, to = 1, by=0.2),
+#   col.regions = colorRampPalette(rev(brewer.pal(5, "RdBu")))(64),
+#   main=NULL
+# )
+# print(fig_scot)
+# 
+# 
+# 
+
+
+
+
+
+
+
+
+#####################################################################################
 # SOURCE DATA
+
+
+
+# 28 September 2014
 
 # 4) load human mortality database (HMD) data on population counts and death counts
 # in the 'tidy data' format suggested by Hadley Wickham 
